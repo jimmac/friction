@@ -1,0 +1,127 @@
+{
+    "id": "graphics.friction.Friction",
+    "runtime": "org.kde.Platform//5.15-25.08",
+    "sdk": "org.kde.Sdk//5.15-25.08",
+    "sdk-extensions": [
+        "org.freedesktop.Sdk.Extension.llvm22"
+    ],
+    "command": "friction",
+    "build-options": {
+        "cflags": "-O2",
+        "cxxflags": "-O2 -frtti",
+        "env": {
+            "CC": "/usr/lib/sdk/llvm22/bin/clang",
+            "CXX": "/usr/lib/sdk/llvm22/bin/clang++",
+            "PATH": "/usr/lib/sdk/llvm22/bin:/usr/bin:/bin"
+        }
+    },
+    "finish-args": [
+        "--share=ipc",
+        "--socket=x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--device=dri",
+        "--device=all",
+        "--share=network",
+        "--filesystem=home",
+        "--filesystem=xdg-run/gvfsd",
+        "--talk-name=org.freedesktop.Notifications",
+        "--talk-name=org.freedesktop.portal.*"
+    ],
+    "cleanup": [
+        "/include",
+        "/lib/pkgconfig",
+        "/share/pkgconfig",
+        "/share/aclocal",
+        "/man",
+        "/share/man",
+        "/share/gtk-doc",
+        "/share/doc",
+        "/share/info"
+    ],
+    "modules": [
+        {
+            "name": "ffmpeg",
+            "buildsystem": "simple",
+            "build-commands": [
+                "./configure --prefix=/app --enable-shared --disable-static --disable-doc --disable-programs --disable-avdevice --disable-postproc --disable-network",
+                "make -j$(nproc)",
+                "make install"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://ffmpeg.org/releases/ffmpeg-4.4.5.tar.xz",
+                    "sha256": "f9514e0d3515aee5a271283df71636e1d1ff7274b15853bcd84e144be416ab07"
+                }
+            ]
+        },
+        {
+            "name": "qscintilla",
+            "buildsystem": "simple",
+            "build-commands": [
+                "mkdir -p build-qt5",
+                "cd build-qt5 && qmake ../src/qscintilla.pro && make -j$(nproc)",
+                "mkdir -p /app/lib /app/include/Qsci",
+                "cp -a build-qt5/libqscintilla2_qt5.so* /app/lib/",
+                "cp -a src/Qsci/*.h /app/include/Qsci/"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.14.1/QScintilla_src-2.14.1.tar.gz",
+                    "sha256": "dfe13c6acc9d85dfcba76ccc8061e71a223957a6c02f3c343b30a9d43a4cdd4d"
+                }
+            ]
+        },
+        {
+            "name": "friction",
+            "buildsystem": "cmake-ninja",
+            "build-options": {
+                "env": {
+                    "PKG_CONFIG_PATH": "/app/lib/pkgconfig"
+                }
+            },
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DCMAKE_INSTALL_PREFIX=/app",
+                "-DQSCINTILLA_INCLUDE_DIRS=/app/include",
+                "-DQSCINTILLA_LIBRARIES_DIRS=/app/lib",
+                "-DQSCINTILLA_LIBRARIES=qscintilla2_qt5"
+            ],
+            "builddir": true,
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/friction2d/friction.git",
+                    "commit": "6e77ee6a9a0855555687c147a77b1cfb46ed6453",
+                    "disable-submodules": true
+                },
+                {
+                    "type": "git",
+                    "url": "https://github.com/friction2d/skia.git",
+                    "commit": "386256b297e93bbe06ee82abdcc701357d9ccd99",
+                    "dest": "src/skia"
+                },
+                {
+                    "type": "git",
+                    "url": "https://github.com/friction2d/gperftools.git",
+                    "commit": "b97c293c812c7ec3cdeccd50a89769e746c01377",
+                    "dest": "src/gperftools"
+                },
+                {
+                    "type": "git",
+                    "url": "https://github.com/friction2d/friction-icon-theme.git",
+                    "commit": "56aecade45bfa3c51912ce04657f20e6d80716e8",
+                    "dest": "src/app/icons"
+                },
+                {
+                    "type": "git",
+                    "url": "https://github.com/friction2d/friction2d.github.io.git",
+                    "commit": "a45f0728fa3fd36b028f49872112e79a02955945",
+                    "dest": "docs"
+                }
+            ]
+        }
+    ]
+}
